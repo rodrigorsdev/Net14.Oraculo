@@ -1,36 +1,45 @@
-﻿using Microsoft.Extensions.Configuration;
-using StackExchange.Redis;
+﻿using SubEquipe1.Domain.Interface;
+using SubEquipe1.Infra.Ioc;
 using System;
-using System.IO;
 
 namespace SubEquipe1
 {
     class Program
     {
-        static IConfigurationRoot _configuration;
-        static ConnectionMultiplexer _connection;
-        static IDatabase _db;
-
         static void Main(string[] args)
         {
-            var builder = new ConfigurationBuilder()
-               .SetBasePath(Directory.GetCurrentDirectory())
-               .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+            Console.WriteLine("Started");
+            Console.Write(Environment.NewLine);
 
-            _configuration = builder.Build();
-            
-            _connection = ConnectionMultiplexer.Connect(_configuration.GetConnectionString("Redis:Url"));
-            _db = _connection.GetDatabase();
+            string completeAwnser = string.Empty;
 
-            var sub = _connection.GetSubscriber();
-            sub.Subscribe(_configuration.GetConnectionString("Redis:Channel"), (ch, msg) =>
+            try
             {
-                var separetedQuestion = msg.ToString().Split(":");
+                var repository = DependencyInjector.GetService<IMessageRepository>();
 
+                repository.Subscribe((ch, msg) =>
+                {
+                    Console.WriteLine($"Message received: {msg}");
 
+                    var questionId = msg.ToString().Split(":")[0];
 
-                _db.HashSet(separetedQuestion[0], "Equipe1", "Resposta");
-            });
+                    completeAwnser = $"{questionId}:Equipe01:Awnser";
+
+                    repository.Send(completeAwnser);
+                });
+
+                Console.Write(Environment.NewLine);
+                Console.WriteLine("Waiting for message");
+
+                Console.Write(Environment.NewLine);
+                Console.WriteLine("Click to finish");
+                Console.Write(Environment.NewLine);
+            }
+            catch (Exception e)
+            {
+                Console.Write(Environment.NewLine);
+                Console.WriteLine($"Error: {e.Message}");
+            }
 
             Console.ReadKey();
         }
