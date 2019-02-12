@@ -45,9 +45,6 @@ namespace SubEquipe1
 
                 Console.Write(Environment.NewLine);
                 Console.WriteLine("Waiting for message");
-
-                Console.Write(Environment.NewLine);
-                Console.WriteLine("Click to finish");
                 Console.Write(Environment.NewLine);
             }
             catch (Exception e)
