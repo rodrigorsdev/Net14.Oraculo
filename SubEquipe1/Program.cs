@@ -2,7 +2,6 @@
 using SubEquipe1.Domain.Interface;
 using SubEquipe1.Infra.Ioc;
 using System;
-using System.Threading.Tasks;
 
 namespace SubEquipe1
 {
