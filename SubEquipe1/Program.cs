@@ -1,6 +1,8 @@
-﻿using SubEquipe1.Domain.Interface;
+﻿using StackExchange.Redis;
+using SubEquipe1.Domain.Interface;
 using SubEquipe1.Infra.Ioc;
 using System;
+using System.Threading.Tasks;
 
 namespace SubEquipe1
 {
@@ -15,26 +17,36 @@ namespace SubEquipe1
 
             try
             {
-                var repository = DependencyInjector.GetService<IMessageRepository>();
+                var messageRepository = DependencyInjector.GetService<IMessageRepository>();
 
-                repository.Subscribe((ch, msg) =>
+                var awnserRepository = DependencyInjector.GetService<IAwnserRepository>();
+
+                messageRepository.Subscribe((ch, msg) =>
                 {
                     string awnser = string.Empty;
 
                     Console.WriteLine($"Message received: {msg}");
 
-                    var questionId = msg.ToString().Split(":")[0];
+                    if (!ValidateMessage(msg))
+                    {
+                        Console.WriteLine("Invalid message!");
+                        Console.Write(Environment.NewLine);
+                    }
+                    else
+                    {
+                        var questionId = msg.ToString().Split(":")[0];
+                        var question = msg.ToString().Split(":")[1];
 
-                    completeAwnser = $"{questionId}:Equipe01:Awnser";
+                        var awnser = awnserRepository.AskTheQuestion(question).Result;
 
-                    repository.Send(completeAwnser);
+                        completeAwnser = $"{questionId}:Equipe01:{awnser}";
+
+                        messageRepository.Send(completeAwnser);
+                    }
                 });
 
                 Console.Write(Environment.NewLine);
                 Console.WriteLine("Waiting for message");
-
-                Console.Write(Environment.NewLine);
-                Console.WriteLine("Click to finish");
                 Console.Write(Environment.NewLine);
             }
             catch (Exception e)
@@ -44,6 +56,18 @@ namespace SubEquipe1
             }
 
             Console.ReadKey();
+        }
+
+        private static bool ValidateMessage(RedisValue msg)
+        {
+            bool result = false;
+
+            var msgArray = msg.ToString().Split(':');
+
+            if (!msg.IsNullOrEmpty && msg.ToString().ToLower().StartsWith("p") && msgArray.Length == 2)
+                result = true;
+
+            return result;
         }
     }
 }
