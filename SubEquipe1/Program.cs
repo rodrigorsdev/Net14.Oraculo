@@ -39,6 +39,7 @@ namespace SubEquipe1
 
                         completeAwnser = $"{questionId}:Equipe01:{awnser}";
 
+                        Console.WriteLine("Resposta encontrada: " + awnser);                        
                         messageRepository.Send(completeAwnser);
                     }
                 });
