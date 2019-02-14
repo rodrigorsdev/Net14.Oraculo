@@ -37,12 +37,12 @@ namespace SubEquipe1
                         var questionId = msg.ToString().Split(":")[0];
                         var question = msg.ToString().Split(":")[1];
 
-                        if (DependencyInjector.UseDefaultAwnser)
-                            awnser = "Desculpe, não sei a resposta para a sua pergunta!";
-                        else
-                            awnser = awnserRepository.AskTheQuestion(question).Result;
+                        awnser = awnserRepository.AskTheQuestion(question).Result;
 
-                        completeAwnser = $"{questionId}:Equipe01:{awnser}";
+                        if(string.IsNullOrEmpty(awnser))
+                            awnser = "Desculpe, não sei a resposta para a sua pergunta!";
+
+                        completeAwnser = $"{questionId}:{DependencyInjector.TeamName}:{awnser}";
 
                         Console.WriteLine("Resposta encontrada: " + awnser);                        
                         messageRepository.Send(completeAwnser);
