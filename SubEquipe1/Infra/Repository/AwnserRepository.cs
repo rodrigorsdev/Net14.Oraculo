@@ -18,20 +18,20 @@ namespace SubEquipe1.Infra.Repository
             question = question.Replace(' ', '+');
 
             //Primeira tentativa 
+            htmlNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class=\"mraOPb\"]");
+
+            if (htmlNode != null)
+            {
+                return htmlNode.FirstChild.FirstChild.InnerText;
+            }
+            //Primeira tentativa 
+
+            //Segunda tentativa
             htmlNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class=\"FSP1Dd\"]");
 
             if (htmlNode != null)
             {
                 return htmlNode.InnerText;
-            }
-            //Primeira tentativa 
-
-            //Segunda tentativa
-            htmlNode = htmlDocument.DocumentNode.SelectSingleNode("//div[@class=\"mraOPb\"]");
-
-            if (htmlNode != null)
-            {
-                return htmlNode.FirstChild.FirstChild.InnerText; 
             }
             //Segunda tentativa
 
