@@ -37,14 +37,24 @@ namespace SubEquipe1
                         var questionId = msg.ToString().Split(":")[0];
                         var question = msg.ToString().Split(":")[1];
 
-                        awnser = awnserRepository.AskTheQuestion(question).Result;
+                        if (question.Contains("+"))
+                        {
+                            var separatedNumbers = question.Split("+");
+                            var firstNumber = Convert.ToInt32(separatedNumbers[0].Substring(10));
+                            var secondNumber = Convert.ToInt32(separatedNumbers[1].Replace("?", string.Empty));
+                            awnser = $"{firstNumber + secondNumber}";
+                        }
+                        else
+                        {
+                            awnser = awnserRepository.AskTheQuestion(question).Result;
 
-                        if(string.IsNullOrEmpty(awnser))
-                            awnser = "Desculpe, não sei a resposta para a sua pergunta!";
+                            if (string.IsNullOrEmpty(awnser))
+                                awnser = "Desculpe, não sei a resposta para a sua pergunta!";   
+                        }
 
                         completeAwnser = $"{questionId}:{DependencyInjector.TeamName}:{awnser}";
 
-                        Console.WriteLine("Resposta encontrada: " + awnser);                        
+                        Console.WriteLine("Resposta: " + awnser);
                         messageRepository.Send(completeAwnser);
                     }
                 });
