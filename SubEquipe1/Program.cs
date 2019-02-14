@@ -19,6 +19,8 @@ namespace SubEquipe1
 
                 repository.Subscribe((ch, msg) =>
                 {
+                    string awnser = string.Empty;
+
                     Console.WriteLine($"Message received: {msg}");
 
                     var questionId = msg.ToString().Split(":")[0];

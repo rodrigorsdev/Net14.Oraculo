@@ -13,6 +13,7 @@ namespace SubEquipe1.Infra.Ioc
 
         private static IServiceCollection Services { get; set; }
 
+        public static bool UseDefaultAwnser { get; private set; }
 
         public static T GetService<T>()
         {
@@ -28,6 +29,8 @@ namespace SubEquipe1.Infra.Ioc
                 .AddJsonFile("appsettings.json");
 
             IConfiguration configuration = builder.Build();
+
+            UseDefaultAwnser = Convert.ToBoolean(configuration["AppOptions:UseDefaultAwnser"]);
 
             return RegisterServices(new ServiceCollection(), configuration);
         }
