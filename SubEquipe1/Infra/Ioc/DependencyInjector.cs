@@ -39,7 +39,7 @@ namespace SubEquipe1.Infra.Ioc
         {
             Services = services;
 
-            services.AddSingleton<IMessageRepository>(a => new MessageRepository(configuration["Redis:Url"], configuration["Redis:Channel"]));
+            services.AddSingleton<IRedisMessageRepository>(a => new RedisMessageRepository(configuration["Redis:Url"], configuration["Redis:Channel"]));
             services.AddSingleton<IAwnserRepository, AwnserRepository>();
 
             return Services;

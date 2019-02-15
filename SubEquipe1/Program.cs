@@ -1,7 +1,10 @@
-﻿using StackExchange.Redis;
+﻿using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using StackExchange.Redis;
 using SubEquipe1.Domain.Interface;
 using SubEquipe1.Infra.Ioc;
 using System;
+using System.Text;
 
 namespace SubEquipe1
 {
@@ -16,51 +19,109 @@ namespace SubEquipe1
 
             try
             {
-                var messageRepository = DependencyInjector.GetService<IMessageRepository>();
+                //var messageRepository = DependencyInjector.GetService<IMessageRepository>();
 
                 var awnserRepository = DependencyInjector.GetService<IAwnserRepository>();
 
-                messageRepository.Subscribe((ch, msg) =>
+                var factory = new ConnectionFactory() { HostName = "40.122.106.36" };
+                using (var connection = factory.CreateConnection())
                 {
-                    string awnser = string.Empty;
-
-                    Console.WriteLine($"Message received: {msg}");
-
-                    if (!ValidateMessage(msg))
+                    using (var channel = connection.CreateModel())
                     {
-                        Console.WriteLine("Invalid message!");
-                        Console.Write(Environment.NewLine);
-                    }
-                    else
-                    {
-                        var questionId = msg.ToString().Split(":")[0];
-                        var question = msg.ToString().Split(":")[1];
+                        channel.QueueDeclare(queue: "perguntas",
+                                             durable: true,
+                                             exclusive: false,
+                                             autoDelete: false,
+                                             arguments: null);
 
-                        if (question.Contains("+"))
+                        var consumer = new EventingBasicConsumer(channel);
+                        consumer.Received += (model, ea) =>
                         {
-                            var separatedNumbers = question.Split("+");
-                            var firstNumber = Convert.ToInt32(separatedNumbers[0].Substring(10));
-                            var secondNumber = Convert.ToInt32(separatedNumbers[1].Replace("?", string.Empty));
-                            awnser = $"{firstNumber + secondNumber}";
-                        }
-                        else
-                        {
-                            awnser = awnserRepository.AskTheQuestion(question).Result;
+                            string awnser = string.Empty;
 
-                            if (string.IsNullOrEmpty(awnser))
-                                awnser = "Desculpe, não sei a resposta para a sua pergunta!";   
-                        }
+                            var body = ea.Body;
+                            var msg = Encoding.UTF8.GetString(body);
 
-                        completeAwnser = $"{questionId}:{DependencyInjector.TeamName}:{awnser}";
+                            Console.WriteLine($"Message received: {msg}");
 
-                        Console.WriteLine("Resposta: " + awnser);
-                        messageRepository.Send(completeAwnser);
+                            if (!ValidateMessage(msg))
+                            {
+                                Console.WriteLine("Invalid message!");
+                                Console.Write(Environment.NewLine);
+                            }
+                            else
+                            {
+                                var questionId = msg.ToString().Split(":")[0];
+                                var question = msg.ToString().Split(":")[1];
+
+                                if (question.Contains("+"))
+                                {
+                                    var separatedNumbers = question.Split("+");
+                                    var firstNumber = Convert.ToInt32(separatedNumbers[0].Substring(10));
+                                    var secondNumber = Convert.ToInt32(separatedNumbers[1].Replace("?", string.Empty));
+                                    awnser = $"{firstNumber + secondNumber}";
+                                }
+                                else
+                                {
+                                    awnser = awnserRepository.AskTheQuestion(question).Result;
+
+                                    if (string.IsNullOrEmpty(awnser))
+                                        awnser = "Desculpe, não sei a resposta para a sua pergunta!";
+                                }
+
+                                completeAwnser = $"{questionId}:{DependencyInjector.TeamName}:{awnser}";
+
+                                Console.WriteLine("Resposta: " + awnser);
+                            }
+                        };
+
+                        channel.BasicConsume(queue: "perguntas",
+                                             autoAck: true,
+                                             consumer: consumer);
                     }
-                });
+                }
 
-                Console.Write(Environment.NewLine);
-                Console.WriteLine("Waiting for message");
-                Console.Write(Environment.NewLine);
+                //    messageRepository.Subscribe((ch, msg) =>
+                //    {
+                //        string awnser = string.Empty;
+
+                //        Console.WriteLine($"Message received: {msg}");
+
+                //        if (!ValidateMessage(msg))
+                //        {
+                //            Console.WriteLine("Invalid message!");
+                //            Console.Write(Environment.NewLine);
+                //        }
+                //        else
+                //        {
+                //            var questionId = msg.ToString().Split(":")[0];
+                //            var question = msg.ToString().Split(":")[1];
+
+                //            if (question.Contains("+"))
+                //            {
+                //                var separatedNumbers = question.Split("+");
+                //                var firstNumber = Convert.ToInt32(separatedNumbers[0].Substring(10));
+                //                var secondNumber = Convert.ToInt32(separatedNumbers[1].Replace("?", string.Empty));
+                //                awnser = $"{firstNumber + secondNumber}";
+                //            }
+                //            else
+                //            {
+                //                awnser = awnserRepository.AskTheQuestion(question).Result;
+
+                //                if (string.IsNullOrEmpty(awnser))
+                //                    awnser = "Desculpe, não sei a resposta para a sua pergunta!";   
+                //            }
+
+                //            completeAwnser = $"{questionId}:{DependencyInjector.TeamName}:{awnser}";
+
+                //            Console.WriteLine("Resposta: " + awnser);
+                //            messageRepository.Send(completeAwnser);
+                //        }
+                //    });
+
+                //    Console.Write(Environment.NewLine);
+                //    Console.WriteLine("Waiting for message");
+                //    Console.Write(Environment.NewLine);
             }
             catch (Exception e)
             {

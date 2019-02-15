@@ -5,13 +5,13 @@ using System;
 
 namespace SubEquipe1.Infra.Repository
 {
-    public class MessageRepository : IMessageRepository
+    public class RedisMessageRepository : IRedisMessageRepository
     {
         private readonly ConnectionMultiplexer _connection;
         private readonly IDatabase _db;
         private readonly string _channel;
 
-        public MessageRepository(string connectionString, string channel)
+        public RedisMessageRepository(string connectionString, string channel)
         {
             _connection = ConnectionMultiplexer.Connect(connectionString);
             _db = _connection.GetDatabase();

@@ -4,7 +4,7 @@ using System;
 
 namespace SubEquipe1.Domain.Interface
 {
-    public interface IMessageRepository
+    public interface IRedisMessageRepository
     {
         void Subscribe(Action<RedisChannel, RedisValue> handler);
         void Send(Message entity);
